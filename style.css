@@ -61,3 +61,108 @@ button {
     justify-content: center;
     align-items: center;
 }
+
+.container {
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: space-between;
+    padding: 30px;
+}
+
+.left-box {
+    width: 48%; 
+    background-color: lightblue;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+    min-height: 80vh; 
+    height: auto; 
+    max-height: 90vh; 
+    overflow: hidden; 
+    display: flex;
+    flex-direction: column;
+    color: darkslategray;
+}
+
+
+.right-container {
+    display: flex;
+    flex-direction: column;
+    width: 48%; 
+}
+
+.right-box {
+    height: auto;  
+    min-height: 36vh; 
+    max-height: 56vh; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background-color: lightblue;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+    color: darkslategray;
+}
+
+.button-box {
+      min-height: 30vh;
+      margin-top: 10px;
+      background-color: lightblue;
+      border-radius: 15px;
+      padding: 10px;
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: center; 
+}
+
+.header-container {
+    display: flex;
+    justify-content: flex-start; 
+    gap: 20px; 
+    width: 100%;
+    padding: 10px;
+}
+
+.header-container h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0; 
+}
+
+.scrollable-container {
+    width: 100%;  
+    flex-grow: 1;  
+    overflow-y: auto;  
+    padding-right: 5px;  
+}
+
+.question-button {
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    border: none;
+    color: white;
+    cursor: pointer;
+    background-color: rgb(5, 65, 84);
+    width: 100%;
+    font-size: 16px;
+}
+.large-button {
+    padding: 20px;
+    height: auto;
+    min-height: 85px;
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    background-color: rgb(5, 65, 84);
+    width: 100%;
+    font-size: 18px; 
+    box-sizing: border-box; 
+}
