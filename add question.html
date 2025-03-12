@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<head>
+    <title>Oral Interview Add Question</title>
+    <link rel="stylesheet" href="testingstyle.css">
+</head>
+
+<body>
+    <div class="add-question">
+        <div class="form-container">
+            <h1>New Question</h1>
+            
+            <label for="question">Enter Your Question:</label>
+            <textarea id="question" name="question" rows="4" placeholder="Type your question here..."></textarea>
+            
+            
+            <div class="dropdown-container">
+                <label for="class">Class:</label>
+                <select id="class" name="class">
+                    <option value="">Select Class</option>
+                    <option value="class1">Class 1</option>
+                    <option value="class2">Class 2</option>
+                    <option value="class3">Class 3</option>
+                </select>
+
+                <label for="competency">Competency:</label>
+                <select id="competency" name="competency">
+                    <option value="">Select Competency</option>
+                    <option value="competency1">Competency 1</option>
+                    <option value="competency2">Competency 2</option>
+                    <option value="competency3">Competency 3</option>
+                </select>
+
+                <label for="category">Category:</label>
+                <select id="category" name="category">
+                    <option value="">Select Category</option>
+                    <option value="category1">Category 1</option>
+                    <option value="category2">Category 2</option>
+                    <option value="category3">Category 3</option>
+                </select>
+            </div>
+
+            <div class="button-container">
+                <button class="submit-button" type="submit">Submit</button>
+                <button class="back-button" onclick="location.href='mainscreen.html';">Back</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+
+</html>
