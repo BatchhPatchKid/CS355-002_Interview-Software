@@ -38,9 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Execute the statement and check for success
     if ($stmt->execute()) {
-        echo "Question added successfully!";
+    // Redirect to mainscreen after successful insertion
+    header("Location: mainscreen.html");
+    exit(); // Ensure script stops execution after redirection
     } else {
-        echo "Error inserting question: " . $stmt->error;
+    echo "Error inserting question: " . $stmt->error;
     }
     
     $stmt->close();
