@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oral Interview Add Question</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="add-question">
+        <div class="form-container">
+            <h1>New Question</h1>
+            <!-- Form starts here -->
+            <form action="addQuestion.php" method="POST">
+                <label for="question">Enter Your Question:</label>
+                <textarea id="question" name="question" rows="4" placeholder="Type your question here..." required></textarea>
+                
+                <div class="dropdown-container">
+                    <label for="class">Class:</label>
+                    <select id="class" name="class" required>
+                        <option value="">Select Class</option>
+                        <option value="CS355">CS355</option>
+                    </select>
+
+                    <label for="competency">Competency:</label>
+                    <select id="competency" name="competency" required>
+                        <option value="">Select Competency</option>
+                        <option value="KR">KR</option>
+                    </select>
+
+                    <label for="category">Category:</label>
+                    <select id="category" name="category">
+                        <option value="">Select Category</option>
+                        <option value="Category1">Category 1</option>
+                    </select>
+                </div>
+
+                <div class="button-container">
+                    <button class="submit-button" type="submit">Submit</button>
+                    <button class="back-button" type="button" onclick="location.href='mainscreen.html';">Back</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
