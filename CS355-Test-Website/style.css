@@ -166,6 +166,11 @@ button {
     font-size: 18px; 
     box-sizing: border-box; 
 }
+.selected {
+    background-color: darkslategray !important; /* Darker background */
+    color: white !important; /* Ensure text is readable */
+}
+
 
 .add-question{
     width: 100%;
@@ -257,3 +262,82 @@ button {
     font-size: 16px;
     box-sizing: border-box; 
 }
+
+.logged_questions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.logged_questions .left-box {
+    width: 90vw;  /* Makes the box almost full width */
+    height: 90vh; /* Makes the box almost full height */
+    max-height: 90vh;
+    padding: 20px;
+    background-color: lightblue; /* Keep existing styles */
+    border-radius: 15px;
+}
+
+.logged_questions .scrollable-container {
+    height: 80vh;  /* Scrollable area */
+    overflow-y: auto;
+}
+.logged_questions table {
+    width: 100%;
+    border-collapse: collapse; /* Makes sure borders are not doubled */
+    margin-top: 20px;
+}
+
+.logged_questions th, .logged_questions td {
+    padding: 12px 20px; /* Add space between text and borders */
+    text-align: left;
+    border-bottom: 1px solid #ddd; /* Add a line between rows */
+}
+
+.logged_questions th {
+    background-color: rgb(23, 77, 95);
+    color: white;
+    font-weight: bold;
+}
+
+.logged_questions td {
+    background-color: #f9f9f9;
+}
+
+.logged_questions tr.selected td {
+    background-color: darkslategray !important;
+    color: white !important;
+}
+
+.logged_questions .button-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.logged_questions .large-button {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centers text horizontally */
+    text-align: center; /* Ensures text is centered */
+    padding: 15px;
+    height: auto;
+    min-height: 85px;
+    border-radius: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    background-color: rgb(5, 65, 84);
+    width: 23%;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+
+
