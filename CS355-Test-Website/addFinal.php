@@ -32,7 +32,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     }
 
     
-    $sql = "SELECT question_text, user_id, class_name, competency_name, question_notes, date_added 
+    $sql = "SELECT question_text, user_id, class_name, competency_name, competency_subject, question_notes, date_added 
             FROM logged_questions WHERE logged_question_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $questionId);
@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
 
     if ($row = $result->fetch_assoc()) {
         
-        $insertSql = "INSERT INTO competency_questions (question_id, question_text, user_id, class_name, competency_name, question_notes, date_added) 
+        $insertSql = "INSERT INTO competency_questions (question_id, question_text, user_id, class_name, competency_name, competency_subject, question_notes, date_added) 
                       VALUES (?, ?, ?, ?, ?, ?, ?)";
         $insertStmt = $conn->prepare($insertSql);
         $insertStmt->bind_param(

@@ -1,50 +1,49 @@
 <?php
 session_start();
+require_once 'generateQuestionID.php';
 
-// Database connection settings
 $host = 'localhost';
 $user = 'root';
 $password = '';
 $dbname = 'databaseCS355';
 
-// Create connection using mysqli
 $conn = new mysqli($host, $user, $password, $dbname);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Process form submission if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Use the session user_id if available, default to 1 for testing
     $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1;
-    
-    // Retrieve and sanitize input values
-    $question_text   = trim($_POST['question']);
-    $class_name      = trim($_POST['class']);
-    $competency_name = trim($_POST['competency']);
-    // Using the category field as notes; adjust as needed
-    $question_notes  = trim($_POST['category']);
-    
-    // Optionally validate inputs here
-    
-    // Prepare an SQL INSERT statement
-    $stmt = $conn->prepare("INSERT INTO logged_questions (user_id, class_name, competency_name, question_text, question_notes, date_added) VALUES (?, ?, ?, ?, ?, NOW())");
+
+    $question_text       = trim($_POST['question']);
+    $class_name          = trim($_POST['class']);
+    $competency_name     = trim($_POST['competency']);
+    $competency_subject  = trim($_POST['category']);
+    $question_notes      = "";
+    $difficulty = intval($_POST['difficulty']); // Example: <input type="number" name="difficulty">
+
+    // Generate the custom question ID
+    try {
+        $custom_id = generate_question_id($difficulty, $conn);
+    } catch (Exception $e) {
+        die("Error generating ID: " . $e->getMessage());
+    }
+
+    // Modify your query to insert the custom ID
+    $stmt = $conn->prepare("INSERT INTO logged_questions (logged_question_id, user_id, class_name, competency_name, competency_subject, question_text, question_notes, date_added) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
     if (!$stmt) {
         die("Prepare failed: " . $conn->error);
     }
-    
-    // Bind parameters to the SQL statement: "issss" means integer, string, string, string, string.
-    $stmt->bind_param("issss", $user_id, $class_name, $competency_name, $question_text, $question_notes);
-    
-    // Execute the statement and check for success
+
+    $stmt->bind_param("iisssss", $custom_id, $user_id, $class_name, $competency_name, $competency_subject, $question_text, $question_notes);
+
     if ($stmt->execute()) {
-    // Redirect to mainscreen after successful insertion
-    header("Location: mainscreen.html");
-    exit(); // Ensure script stops execution after redirection
+        header("Location: add question.html");
+        exit();
     } else {
-    echo "Error inserting question: " . $stmt->error;
+        echo "Error inserting question: " . $stmt->error;
     }
-    
+
     $stmt->close();
 }
 

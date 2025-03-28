@@ -42,6 +42,7 @@ $queries = array(
       user_id INTEGER NOT NULL,
       class_name VARCHAR(10) NOT NULL,
       competency_name VARCHAR(10) NOT NULL,
+      competency_subject TEXT,
       question_text TEXT NOT NULL,
       question_notes TEXT,
       date_added TIMESTAMP NOT NULL,
@@ -55,6 +56,7 @@ $queries = array(
       class_name VARCHAR(10) NOT NULL,
       competency_name VARCHAR(10) NOT NULL,
       question_text TEXT NOT NULL,
+      competency_subject TEXT,
       question_notes TEXT,
       date_added TIMESTAMP NOT NULL,
       PRIMARY KEY (logged_question_id)

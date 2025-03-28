@@ -31,7 +31,19 @@
                         <option value="">Select Category</option>
                         <option value="Category1">Category 1</option>
                     </select>
+
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty" name="difficulty" required>
+                        <option value="">Select Difficulty</option>
+                        <option value="1">1 - Easiest</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4 - Most Challenging</option>
+                    </select>
                 </div>
+
+                <label for="notes">Notes (Optional):</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="Add any notes here..."></textarea>
 
                 <div class="button-container">
                     <button class="submit-button" type="submit">Submit</button>
