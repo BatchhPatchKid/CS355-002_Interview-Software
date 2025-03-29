@@ -4,27 +4,107 @@
 <head>
     <title>Oral Interview Question Select</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+        let popupWindow;
+
+        function openPopup() {
+            popupWindow = window.open('', 'PopupWindow', 'width=1000,height=1000');
+            popupWindow.document.write('<html><head><title>Student View</title></head><body><h1>Initial Content</h1></body></html>');
+        }
+        async function getRandomQuestion() {
+    try {
+        const response = await fetch('getRandomQuestion.php');
+        const data = await response.json();
+
+        if (data.error) {
+            alert(data.error);
+        } else {
+            const content = `
+                <strong>Class:</strong> ${data.class_name}<br>
+                <strong>Competency:</strong> ${data.competency_name}<br>
+                <strong>Category:</strong> ${data.competency_subject}<br><br>
+                <strong>Question:</strong> ${data.question_text}<br>
+                <em>${data.question_notes || ""}</em>
+            `;
+            updatePopup(content);
+        }
+    } catch (err) {
+        alert('Error fetching random question.');
+        console.error(err);
+    }
+}
+
+
+        function updatePopup(content) {
+            if (popupWindow && !popupWindow.closed) {
+                popupWindow.document.body.innerHTML = `<h1>${content}</h1>`;
+            } else {
+                alert('Please open the student view first!');
+            }
+        }
+        function openPopup() {
+    const width = 1000;
+    const height = 1000;
+
+    const left = (window.innerWidth - width) / 2 + window.screenX;
+    const top = (window.innerHeight - height) / 2 + window.screenY;
+
+    popupWindow = window.open(
+        '',
+        'PopupWindow',
+        `width=${width},height=${height},left=${left},top=${top}`
+    );
+
+    popupWindow.document.write(`
+        <html>
+            <head>
+                <title>Student View</title>
+                <style>
+                    body {
+                        display: flex;
+                        height: 100vh;
+                        margin: 0;
+                        justify-content: center;
+                        align-items: center;
+                        text-align: center;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Initial Content</h1>
+            </body>
+        </html>
+    `);
+}
+
+    </script>
 </head>
 
 <body>
     <div class="container">
         <div class="left-box">
             <div class="header-container">
+                <button onclick="openPopup()">Open Student View</button>
                 <h2>Class:</h2>
                 <h2>Competency:</h2>
             </div>
     
             <div class="scrollable-container">
-                <button class="question-button" type = "submit">Question 1</button>
-                <button class="question-button" type = "submit">Question 2</button>
-                <button class="question-button" type = "submit">Question 3</button>
-                <button class="question-button" type = "submit">Question 4</button>
-                <button class="question-button" type = "submit">Question 5</button>
-                <button class="question-button" type = "submit">Question 6</button>
-                <button class="question-button" type = "submit">Question 7</button>
-                <button class="question-button" type = "submit">Question 8</button>
-                <button class="question-button" type = "submit">Question 9</button>
-                <button class="question-button" type = "submit">Question 10</button>
+                <button onclick="updatePopup('question 1')">Update to Content 1</button>
+                <button onclick="updatePopup('question 2')">Update to Content 2</button>
+                <button onclick="updatePopup('question 3')">Update to Content 3</button>
+                <button onclick="updatePopup('question 4')">Update to Content 4</button>
+                <button onclick="updatePopup('question 5')">Update to Content 5</button>
+                <button onclick="updatePopup('question 6')">Update to Content 6</button>
+                <button onclick="updatePopup('question 7')">Update to Content 7</button>
+                <button onclick="updatePopup('question 8')">Update to Content 8</button>
+                <button onclick="updatePopup('question 9')">Update to Content 9</button>
+                <button onclick="updatePopup('question 10')">Update to Content 10</button>
+                <button onclick="updatePopup('question 11')">Update to Content 11</button>
+                <button onclick="updatePopup('question 12')">Update to Content 12</button>
+                <button onclick="updatePopup('question 13')">Update to Content 13</button>
+                <button onclick="updatePopup('question 14')">Update to Content 14</button>
+                <button onclick="updatePopup('question 15')">Update to Content 15</button>
             </div>
         </div>
 
@@ -51,14 +131,10 @@
                 </div>
             </div>
             <div class="button-box">
-                <button class="large-button">Random</button>
+                <button class="large-button" onclick="getRandomQuestion()">Random</button>
                 <button class="large-button"onclick="location.href='mainscreen.html'">End Interview</a>
             </div>
         </div>
     </div>
 
 </body>
-
-
-
-</html>
