@@ -27,77 +27,87 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Now you can execute your table creation queries or other SQL commands
 $queries = array(
-    // Table: class_competency
-    "CREATE TABLE IF NOT EXISTS class_competency (
-      class_name VARCHAR(10) NOT NULL,
-      competency_name VARCHAR(10) NOT NULL,
-      PRIMARY KEY (class_name, competency_name)
-    )",
-    
-    // Table: competency_questions
-    "CREATE TABLE IF NOT EXISTS competency_questions (
-      question_id VARCHAR(12) NOT NULL,
-      user_id INTEGER NOT NULL,
-      class_name VARCHAR(10) NOT NULL,
-      competency_name VARCHAR(10) NOT NULL,
-      competency_subject TEXT,
-      question_text TEXT NOT NULL,
-      question_notes TEXT,
-      date_added TIMESTAMP NOT NULL,
-      PRIMARY KEY (question_id)
-    )",
-    
-    // Table: logged_questions
-    "CREATE TABLE IF NOT EXISTS logged_questions (
-      logged_question_id INTEGER NOT NULL AUTO_INCREMENT,
-      user_id INTEGER NOT NULL,
-      class_name VARCHAR(10) NOT NULL,
-      competency_name VARCHAR(10) NOT NULL,
-      question_text TEXT NOT NULL,
-      competency_subject TEXT,
-      question_notes TEXT,
-      date_added TIMESTAMP NOT NULL,
-      PRIMARY KEY (logged_question_id)
-    )",
-    
-    // Table: users
-    "CREATE TABLE IF NOT EXISTS users (
-      user_id INTEGER NOT NULL AUTO_INCREMENT,
-      username VARCHAR(45) NOT NULL UNIQUE,
-      password VARCHAR(255) NOT NULL,
-      role ENUM('instructor','ta') NOT NULL,
-      PRIMARY KEY (user_id)
-    )",
-    
-    // Table: students
-    "CREATE TABLE IF NOT EXISTS students (
-      student_id INTEGER NOT NULL AUTO_INCREMENT,
-      student_name VARCHAR(45) NOT NULL,
-      PRIMARY KEY (student_id)
-    )",
-    
-    // Table: student_competency_performance
-    "CREATE TABLE IF NOT EXISTS student_competency_performance (
-      performance_id INTEGER NOT NULL AUTO_INCREMENT,
-      student_id INTEGER NOT NULL,
-      class_name VARCHAR(10) NOT NULL,
-      competency_name VARCHAR(10) NOT NULL,
-      performance_score VARCHAR(45),
-      instructor_notes TEXT,
-      last_attempt_date TIMESTAMP NOT NULL,
-      attempt_count INTEGER NOT NULL,
-      PRIMARY KEY (performance_id)
-    )",
-    
-    // Table: student_competency_questions_asked
-    "CREATE TABLE IF NOT EXISTS student_competency_questions_asked (
-      record_id INTEGER NOT NULL AUTO_INCREMENT,
-      performance_id INTEGER NOT NULL,
-      question_id VARCHAR(12) NOT NULL,
-      PRIMARY KEY (record_id)
-    )"
+  // Table: users
+  "CREATE TABLE IF NOT EXISTS users (
+    user_id INT NOT NULL AUTO_INCREMENT,
+    username VARCHAR(45) NOT NULL,
+    password VARCHAR(255),
+    role ENUM('instructor', 'ta'),
+    PRIMARY KEY (user_id),
+    UNIQUE KEY (username)
+)",
+  
+  // Table: students
+  "CREATE TABLE IF NOT EXISTS students (
+    student_id INT NOT NULL AUTO_INCREMENT,
+    student_name VARCHAR(45) NOT NULL,
+    PRIMARY KEY (student_id)
+)",
+  
+  // Table: class_competency
+  "CREATE TABLE IF NOT EXISTS class_competency (
+    class_name VARCHAR(10) NOT NULL,
+    competency_name VARCHAR(10) NOT NULL,
+    class_subject VARCHAR(10) NOT NULL,
+    PRIMARY KEY (class_name, competency_name, class_subject)
+)",
+  
+  // Table: competency_questions
+  "CREATE TABLE IF NOT EXISTS competency_questions (
+    question_id VARCHAR(12) NOT NULL,
+    user_id INT,
+    class_name VARCHAR(10),
+    competency_name VARCHAR(10),
+    class_subject VARCHAR(10),
+    question_text TEXT,
+    question_notes TEXT,
+    date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (question_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (class_name, competency_name, class_subject) REFERENCES class_competency(class_name, competency_name, class_subject)
+)",
+  
+  // Table: logged_questions
+  "CREATE TABLE IF NOT EXISTS logged_questions (
+    logged_question_id INT NOT NULL AUTO_INCREMENT,
+    user_id INT,
+    class_name VARCHAR(10),
+    competency_name VARCHAR(10),
+    class_subject VARCHAR(10),
+    question_text TEXT,
+    question_notes TEXT,
+    date_added TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (logged_question_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (class_name, competency_name, class_subject) REFERENCES class_competency(class_name, competency_name, class_subject)
+)",
+  
+  // Table: student_competency_performance
+  "CREATE TABLE IF NOT EXISTS student_competency_performance (
+    performance_id INT NOT NULL AUTO_INCREMENT,
+    student_id INT,
+    class_name VARCHAR(10),
+    competency_name VARCHAR(10),
+    class_subject VARCHAR(10),
+    performance_score VARCHAR(45),
+    instructor_notes TEXT,
+    last_attempt_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    attempt_count INT,
+    PRIMARY KEY (performance_id),
+    FOREIGN KEY (student_id) REFERENCES students(student_id),
+    FOREIGN KEY (class_name, competency_name, class_subject) REFERENCES class_competency(class_name, competency_name, class_subject)
+)",
+  
+  // Table: student_competency_questions_asked
+  "CREATE TABLE IF NOT EXISTS student_competency_questions_asked (
+    record_id INT NOT NULL AUTO_INCREMENT,
+    performance_id INT,
+    question_id VARCHAR(12),
+    PRIMARY KEY (record_id),
+    FOREIGN KEY (performance_id) REFERENCES student_competency_performance(performance_id),
+    FOREIGN KEY (question_id) REFERENCES competency_questions(question_id)
+)"
 );
 
 foreach ($queries as $query) {

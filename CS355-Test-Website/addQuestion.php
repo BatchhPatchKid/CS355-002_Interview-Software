@@ -1,51 +1,107 @@
 <?php
 session_start();
-require_once 'generateQuestionID.php';
 
-$host = 'localhost';
-$user = 'root';
-$password = '';
-$dbname = 'databaseCS355';
+// Database connection settings
+$host   = 'localhost';
+$dbUser = 'root';
+$dbPass = ''; // No password
+$dbName = 'databaseCS355';
 
-$conn = new mysqli($host, $user, $password, $dbname);
+// Create connection to the database
+$conn = new mysqli($host, $dbUser, $dbPass, $dbName);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 1;
+// Retrieve distinct class names
+$class_query = "SELECT DISTINCT class_name FROM class_competency";
+$class_result = $conn->query($class_query);
 
-    $question_text       = trim($_POST['question']);
-    $class_name          = trim($_POST['class']);
-    $competency_name     = trim($_POST['competency']);
-    $competency_subject  = trim($_POST['category']);
-    $question_notes      = "";
-    $difficulty = intval($_POST['difficulty']); // Example: <input type="number" name="difficulty">
+// Retrieve distinct competency names
+$competency_query = "SELECT DISTINCT competency_name FROM class_competency";
+$competency_result = $conn->query($competency_query);
 
-    // Generate the custom question ID
-    try {
-        $custom_id = generate_question_id($difficulty, $conn);
-    } catch (Exception $e) {
-        die("Error generating ID: " . $e->getMessage());
-    }
+// Retrieve distinct subjects (i.e. category_subject, now stored as class_subject)
+$subject_query = "SELECT DISTINCT class_subject FROM class_competency";
+$subject_result = $conn->query($subject_query);
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oral Interview Add Question</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="add-question">
+        <div class="form-container">
+            <h1>New Question</h1>
+            <form action="processAddQuestion.php" method="POST">
+                <label for="question">Enter Your Question:</label>
+                <textarea id="question" name="question" rows="4" placeholder="Type your question here..." required></textarea>
+                
+                <div class="dropdown-container">
+                    <label for="class">Class:</label>
+                    <select id="class" name="class" required>
+                        <option value="">Select Class</option>
+                        <?php
+                        if ($class_result && $class_result->num_rows > 0) {
+                            while ($row = $class_result->fetch_assoc()) {
+                                $class = htmlspecialchars($row['class_name']);
+                                echo "<option value=\"$class\">$class</option>";
+                            }
+                        }
+                        ?>
+                    </select>
 
-    // Modify your query to insert the custom ID
-    $stmt = $conn->prepare("INSERT INTO logged_questions (logged_question_id, user_id, class_name, competency_name, competency_subject, question_text, question_notes, date_added) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
-    if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
-    }
+                    <label for="competency">Competency:</label>
+                    <select id="competency" name="competency" required>
+                        <option value="">Select Competency</option>
+                        <?php
+                        if ($competency_result && $competency_result->num_rows > 0) {
+                            while ($row = $competency_result->fetch_assoc()) {
+                                $competency = htmlspecialchars($row['competency_name']);
+                                echo "<option value=\"$competency\">$competency</option>";
+                            }
+                        }
+                        ?>
+                    </select>
 
-    $stmt->bind_param("iisssss", $custom_id, $user_id, $class_name, $competency_name, $competency_subject, $question_text, $question_notes);
+                    <label for="subject">Subject:</label>
+                    <select id="subject" name="subject" required>
+                        <option value="">Select Subject</option>
+                        <?php
+                        if ($subject_result && $subject_result->num_rows > 0) {
+                            while ($row = $subject_result->fetch_assoc()) {
+                                $subject = htmlspecialchars($row['class_subject']);
+                                echo "<option value=\"$subject\">$subject</option>";
+                            }
+                        }
+                        ?>
+                    </select>
 
-    if ($stmt->execute()) {
-        header("Location: add question.html");
-        exit();
-    } else {
-        echo "Error inserting question: " . $stmt->error;
-    }
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty" name="difficulty" required>
+                        <option value="">Select Difficulty</option>
+                        <option value="1">1 - Easiest</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4 - Most Challenging</option>
+                    </select>
+                </div>
 
-    $stmt->close();
-}
+                <label for="notes">Notes (Optional):</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="Add any notes here..."></textarea>
 
+                <div class="button-container">
+                    <button class="submit-button" type="submit">Submit</button>
+                    <button class="back-button" type="button" onclick="location.href='mainscreen.html';">Back</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+<?php
+// Close the database connection
 $conn->close();
 ?>
