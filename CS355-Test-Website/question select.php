@@ -51,7 +51,7 @@ $conn->close();
                         </style>
                     </head>
                     <body>
-                        <h1>Initial Content</h1>
+                        <h1></h1>
                     </body>
                 </html>
             `);
