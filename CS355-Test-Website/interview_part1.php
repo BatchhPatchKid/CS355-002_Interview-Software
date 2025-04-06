@@ -1,4 +1,5 @@
 <?php
+// Handle POST submission if this is also the processing page
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $selectedClasses = $_POST['classes'] ?? [];
     $selectedCompetencies = $_POST['competencies'] ?? [];
@@ -6,9 +7,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     echo "<h2>You selected:</h2>";
 
     echo "<h3>Classes:</h3><ul>";
-    foreach ($selectedClasses as $c) {
-        list($class, $subject) = explode('|', $c);
-        echo "<li>Class: " . htmlspecialchars($class) . " | Subject: " . htmlspecialchars($subject) . "</li>";
+    foreach ($selectedClasses as $class) {
+        echo "<li>Class: " . htmlspecialchars($class) . "</li>";
     }
     echo "</ul>";
 
@@ -16,12 +16,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     foreach ($selectedCompetencies as $comp) {
         echo "<li>" . htmlspecialchars($comp) . "</li>";
     }
-    echo "</ul>";
-} else {
-    echo "Invalid request.";
+    echo "</ul><hr>";
 }
-?>
-<?php
+
 // Connect to the database
 $host = 'localhost';
 $user = 'root';
@@ -34,7 +31,7 @@ if ($conn->connect_error) {
 }
 
 // Fetch distinct classes
-$class_query = "SELECT DISTINCT class_name, class_subject FROM class_competency";
+$class_query = "SELECT DISTINCT class_name FROM class_competency";
 $class_result = $conn->query($class_query);
 
 // Fetch distinct competencies
@@ -54,14 +51,14 @@ $competency_result = $conn->query($competency_query);
     <div class="main">
         <h1>Interview</h1>
 
-        <form action="submit_selection.php" method="POST">
+        <form action="question select.php" method="POST">
             <fieldset>
                 <legend>Choose Class(es):</legend>
                 <?php
                 if ($class_result->num_rows > 0) {
                     while ($row = $class_result->fetch_assoc()) {
-                        $value = $row['class_name'] . '|' . $row['class_subject']; // Combine for easy passing
-                        echo "<label><input type='checkbox' name='classes[]' value='$value'> " . htmlspecialchars($row['class_name']) . " (" . htmlspecialchars($row['class_subject']) . ")</label><br>";
+                        $className = htmlspecialchars($row['class_name']);
+                        echo "<label><input type='checkbox' name='classes[]' value='$className'> $className</label><br>";
                     }
                 } else {
                     echo "<p>No classes found.</p>";
@@ -75,7 +72,8 @@ $competency_result = $conn->query($competency_query);
                 <?php
                 if ($competency_result->num_rows > 0) {
                     while ($row = $competency_result->fetch_assoc()) {
-                        echo "<label><input type='checkbox' name='competencies[]' value='" . htmlspecialchars($row['competency_name']) . "'> " . htmlspecialchars($row['competency_name']) . "</label><br>";
+                        $compName = htmlspecialchars($row['competency_name']);
+                        echo "<label><input type='checkbox' name='competencies[]' value='$compName'> $compName</label><br>";
                     }
                 } else {
                     echo "<p>No competencies found.</p>";
@@ -96,3 +94,4 @@ $competency_result = $conn->query($competency_query);
 <?php
 $conn->close();
 ?>
+
