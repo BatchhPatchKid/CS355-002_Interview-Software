@@ -1,4 +1,12 @@
 <?php
+session_start();
+
+// Redirect to login.php if the user is not logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
 // Handle POST submission if this is also the processing page
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $selectedClasses = $_POST['classes'] ?? [];

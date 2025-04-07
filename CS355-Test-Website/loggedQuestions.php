@@ -62,7 +62,7 @@ $result = $conn->query($sql);
                 <a href="#" class="large-button" onclick="addFinal()">Add Final</a>
                 <a href="modify_question.php" class="large-button">Modify Question</a>
                 <a href="#" class="large-button" onclick="deleteQuestion()">Delete Question</a>
-                <a href="mainscreen.html" class="large-button">Back</a>
+                <a href="mainscreen.php" class="large-button">Back</a>
                 </div>
     </div>
 </div>

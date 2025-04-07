@@ -1,7 +1,12 @@
 <?php
 session_start();
 
-// Database connection settings
+// Redirect to login.php if the user is not logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
+
 $host   = 'localhost';
 $dbUser = 'root';
 $dbPass = ''; // No password
@@ -12,18 +17,11 @@ $conn = new mysqli($host, $dbUser, $dbPass, $dbName);
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+$conn->set_charset("utf8");
 
-// Retrieve distinct class names
+// Retrieve distinct class names for the dropdown
 $class_query = "SELECT DISTINCT class_name FROM class_competency";
 $class_result = $conn->query($class_query);
-
-// Retrieve distinct competency names
-$competency_query = "SELECT DISTINCT competency_name FROM class_competency";
-$competency_result = $conn->query($competency_query);
-
-// Retrieve distinct subjects (i.e. category_subject, now stored as class_subject)
-$subject_query = "SELECT DISTINCT class_subject FROM class_competency";
-$subject_result = $conn->query($subject_query);
 ?>
 <!DOCTYPE html>
 <html>
@@ -56,27 +54,11 @@ $subject_result = $conn->query($subject_query);
                     <label for="competency">Competency:</label>
                     <select id="competency" name="competency" required>
                         <option value="">Select Competency</option>
-                        <?php
-                        if ($competency_result && $competency_result->num_rows > 0) {
-                            while ($row = $competency_result->fetch_assoc()) {
-                                $competency = htmlspecialchars($row['competency_name']);
-                                echo "<option value=\"$competency\">$competency</option>";
-                            }
-                        }
-                        ?>
                     </select>
 
                     <label for="subject">Subject:</label>
                     <select id="subject" name="subject" required>
                         <option value="">Select Subject</option>
-                        <?php
-                        if ($subject_result && $subject_result->num_rows > 0) {
-                            while ($row = $subject_result->fetch_assoc()) {
-                                $subject = htmlspecialchars($row['class_subject']);
-                                echo "<option value=\"$subject\">$subject</option>";
-                            }
-                        }
-                        ?>
                     </select>
 
                     <label for="difficulty">Difficulty:</label>
@@ -94,14 +76,59 @@ $subject_result = $conn->query($subject_query);
 
                 <div class="button-container">
                     <button class="submit-button" type="submit">Submit</button>
-                    <button class="back-button" type="button" onclick="location.href='mainscreen.html';">Back</button>
+                    <button class="back-button" type="button" onclick="location.href='mainscreen.php';">Back</button>
                 </div>
             </form>
         </div>
     </div>
+    
+    <!-- JavaScript to update competency and subject dropdowns based on the selected class -->
+    <script>
+    document.getElementById('class').addEventListener('change', function() {
+        var selectedClass = this.value;
+        var competencySelect = document.getElementById('competency');
+        var subjectSelect = document.getElementById('subject');
+        
+        // Reset the competency and subject dropdowns to default option
+        competencySelect.innerHTML = '<option value="">Select Competency</option>';
+        subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+        
+        if (selectedClass !== '') {
+            fetch('getClassDetails.php?class=' + encodeURIComponent(selectedClass))
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok: " + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if(data.error) {
+                        console.error("Error in response:", data.error);
+                        return;
+                    }
+                    // Populate competency dropdown
+                    data.competencies.forEach(function(comp) {
+                        var option = document.createElement('option');
+                        option.value = comp;
+                        option.textContent = comp;
+                        competencySelect.appendChild(option);
+                    });
+                    // Populate subject dropdown
+                    data.subjects.forEach(function(subj) {
+                        var option = document.createElement('option');
+                        option.value = subj;
+                        option.textContent = subj;
+                        subjectSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching class details:', error);
+                });
+        }
+    });
+    </script>
 </body>
 </html>
 <?php
-// Close the database connection
 $conn->close();
 ?>

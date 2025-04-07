@@ -141,7 +141,7 @@ $conn->close();
             </div>
             <div class="button-box">
                 <button class="large-button" onclick="getRandomQuestion()">Random</button>
-                <button class="large-button" onclick="location.href='mainscreen.html'">End Interview</button>
+                <button class="large-button" onclick="location.href='mainscreen.php'">End Interview</button>
             </div>
         </div>
     </div>

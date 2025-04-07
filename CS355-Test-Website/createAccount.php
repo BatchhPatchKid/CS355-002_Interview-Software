@@ -1,44 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Account</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main">
+        <h1>Create Account</h1>
+        <form action="createAccount.php" method="POST">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Enter your Username" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Enter your Password" required>
+
+            <label for="role">Role:</label>
+            <select id="role" name="role" required>
+                <option value="">Select Role</option>
+                <option value="instructor">Instructor</option>
+                <option value="ta">TA</option>
+            </select>
+
+            <div class="wrap">
+                <button type="submit">Create Account</button>
+            </div>
+            <button onclick="location.href='mainscreen.php'">Back</button>
+        </form>
+    </div>
+</body>
+</html>
 <?php
-// Database connection settings
-$host = 'localhost';
-$user = 'root';
-$password = ''; // no password for now
-$dbname = 'databaseCS355';
-
-$conn = new mysqli($host, $user, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// Define encryption key
-$encryptionKey = '';
-
+session_start();
 // Process account creation if POST data is provided
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Retrieve input values
-    $username = trim($_POST['username']);
-    $password = trim($_POST['password']);
-    $role = trim($_POST['role']); // Expect 'instructor' or 'ta'
+    // Database connection settings
+    $host   = 'localhost';
+    $dbUser = 'root';
+    $dbPass = ''; // no password for now
+    $dbName = 'databaseCS355';
 
-    // Check required fields
-    if (empty($username) || empty($password) || empty($role)) {
-        die("Missing required fields.");
-    }
+    try {
+        // Create the connection
+        $conn = new mysqli($host, $dbUser, $dbPass, $dbName);
+        $conn->set_charset("utf8");
 
-    // Prepare the SQL INSERT statement using AES_ENCRYPT for the password column
-    $stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, AES_ENCRYPT(?, ?), ?)");
-    if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
-    }
-    $stmt->bind_param("ssss", $username, $password, $encryptionKey, $role);
+        // Retrieve and sanitize input values
+        $username = trim($_POST['username']);
+        $password = trim($_POST['password']);
+        $role     = trim($_POST['role']); // Expect 'instructor' or 'ta'
 
-    if ($stmt->execute()) {
+        // Check required fields
+        if (empty($username) || empty($password) || empty($role)) {
+            throw new Exception("Missing required fields.");
+        }
+
+        // Hash the password using PHP's password_hash function
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+        // Prepare the SQL INSERT statement
+        $stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $username, $hashedPassword, $role);
+
+        // Execute the statement
+        $stmt->execute();
         echo "Account created successfully.";
-    } else {
-        echo "Error creating account: " . $stmt->error;
-    }
-    $stmt->close();
-}
 
-$conn->close();
+        $stmt->close();
+        $conn->close();
+    } catch (mysqli_sql_exception $e) {
+        // Duplicate entry error code is 1062
+        if ($e->getCode() == 1062) {
+            echo "Error: The username already exists. Please choose a different username.";
+        } else {
+            echo "Error creating account: " . $e->getMessage();
+        }
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
+    }
+}
 ?>
