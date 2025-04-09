@@ -13,11 +13,10 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     $questionId = intval($_POST['id']);
 
-    
+    // Check if the question already exists in competency_questions
     $checkSql = "SELECT COUNT(*) FROM competency_questions WHERE question_id = ?";
     $checkStmt = $conn->prepare($checkSql);
     $checkStmt->bind_param("i", $questionId);
@@ -28,11 +27,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
 
     if ($count > 0) {
         echo "This question has already been added.";
-        exit; 
+        exit;
     }
 
-    
-    $sql = "SELECT question_text, user_id, class_name, competency_name, competency_subject, question_notes, date_added 
+    // Fetch question details including class_subject
+    $sql = "SELECT question_text, user_id, class_name, class_subject, competency_name, question_notes, date_added 
             FROM logged_questions WHERE logged_question_id = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $questionId);
@@ -40,23 +39,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
     $result = $stmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
-        
-        $insertSql = "INSERT INTO competency_questions (question_id, question_text, user_id, class_name, competency_name, competency_subject, question_notes, date_added) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?)";
+        // Insert into competency_questions
+        $insertSql = "INSERT INTO competency_questions 
+                      (question_id, question_text, user_id, class_name, class_subject, competency_name, question_notes, date_added) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $insertStmt = $conn->prepare($insertSql);
         $insertStmt->bind_param(
-            "isissss",
-            $questionId, 
+            "isisssss",
+            $questionId,
             $row['question_text'],
             $row['user_id'],
             $row['class_name'],
+            $row['class_subject'],
             $row['competency_name'],
             $row['question_notes'],
             $row['date_added']
         );
 
         if ($insertStmt->execute()) {
-            
+            // Remove from logged_questions
             $deleteSql = "DELETE FROM logged_questions WHERE logged_question_id = ?";
             $deleteStmt = $conn->prepare($deleteSql);
             $deleteStmt->bind_param("i", $questionId);

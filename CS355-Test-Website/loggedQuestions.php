@@ -14,7 +14,17 @@ if ($conn->connect_error) {
 }
 
 // Fetch all questions from the database
-$sql = "SELECT question_text, logged_question_id, user_id, class_name, competency_name, question_notes, date_added FROM logged_questions ORDER BY date_added DESC";
+$sql = "SELECT 
+            question_text, 
+            logged_question_id, 
+            user_id, 
+            class_name, 
+            competency_name, 
+            class_subject,  
+            question_notes, 
+            date_added 
+        FROM logged_questions 
+        ORDER BY date_added DESC";
 $result = $conn->query($sql);
 ?>
 
@@ -29,16 +39,17 @@ $result = $conn->query($sql);
 <body>
 <div class="logged_questions">
     <div class="container">
-        <div class="left-box ">
+        <div class="left-box">
             <h2>Logged Questions</h2>
             <div class="scrollable-container">
-                            <table id="questionsTable">
+                <table id="questionsTable">
                     <thead>
                         <tr>
                             <th>Question</th>
                             <th>User ID</th>
                             <th>Class</th>
                             <th>Competency</th>
+                            <th>Subject</th>
                             <th>Notes</th>
                             <th>Date Added</th>
                         </tr>
@@ -50,22 +61,25 @@ $result = $conn->query($sql);
                             <td><?php echo htmlspecialchars($row['user_id']); ?></td>
                             <td><?php echo htmlspecialchars($row['class_name']); ?></td>
                             <td><?php echo htmlspecialchars($row['competency_name']); ?></td>
+                            <td><?php echo htmlspecialchars($row['class_subject']); ?></td>
                             <td><?php echo htmlspecialchars($row['question_notes']); ?></td>
                             <td><?php echo htmlspecialchars($row['date_added']); ?></td>
                         </tr>
                     <?php } ?>
-                </tbody>
+                    </tbody>
                 </table>
 
-
                 <div class="button-container">
-                <a href="#" class="large-button" onclick="addFinal()">Add Final</a>
-                <a href="modify_question.php" class="large-button">Modify Question</a>
-                <a href="#" class="large-button" onclick="deleteQuestion()">Delete Question</a>
-                <a href="mainscreen.php" class="large-button">Back</a>
+                    <a href="#" class="large-button" onclick="addFinal()">Add Final</a>
+                    <a href="modify_question.php" class="large-button">Modify Question</a>
+                    <a href="#" class="large-button" onclick="deleteQuestion()">Delete Question</a>
+                    <a href="mainscreen.php" class="large-button">Back</a>
                 </div>
+            </div>
+        </div>
     </div>
 </div>
+
 
 <script>
 let selectedRow = null; // This variable keeps track of the selected row
