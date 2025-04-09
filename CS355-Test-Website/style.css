@@ -67,10 +67,12 @@ button {
     flex-wrap: wrap; 
     justify-content: space-between;
     padding: 30px;
+    min-width: 90%;
 }
 
 .left-box {
-    width: 48%; 
+    width: 48%;
+    min-width: 48%; 
     background-color: lightblue;
     border-radius: 15px;
     padding: 10px;
@@ -88,13 +90,16 @@ button {
 .right-container {
     display: flex;
     flex-direction: column;
-    width: 48%; 
+    width: 48%;
+    min-width: 48%;
+     
 }
 
 .right-box {
     height: auto;  
     min-height: 36vh; 
     max-height: 56vh; 
+    min-width: 80%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -132,7 +137,9 @@ button {
 }
 
 .scrollable-container {
-    width: 100%;  
+    width: 100%; 
+    min-height: 30%;
+    min-width: 40%;
     flex-grow: 1;  
     overflow-y: auto;  
     padding-right: 5px;  
@@ -148,6 +155,7 @@ button {
     cursor: pointer;
     background-color: rgb(5, 65, 84);
     width: 100%;
+    min-width: 300px;
     font-size: 16px;
 }
 .large-button {
