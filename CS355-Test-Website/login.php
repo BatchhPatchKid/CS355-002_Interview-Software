@@ -18,10 +18,17 @@
                 <button type="submit">Login</button>
             </div>
             <button onclick="location.href='mainscreen.php'">Back</button>
+
+            <!-- BEGIN: Add a "Forgot Password?" link -->
+            <p>
+                <a href="forgotPassword.php">Forgot Password?</a>
+            </p>
+            <!-- END: "Forgot Password?" link -->
         </form>
     </div>
 </body>
 </html>
+
 <?php
 session_start();
 
@@ -66,7 +73,7 @@ try {
                 $_SESSION['username'] = $username;
                 $_SESSION['role'] = $row['role'];  // role is still stored if needed later
 
-                // Redirect to a protected page (for example, addQuestion.php)
+                // Redirect to a protected page (for example, mainscreen.php)
                 header("Location: mainscreen.php");
                 exit();
             } else {
