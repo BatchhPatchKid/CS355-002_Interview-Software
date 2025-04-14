@@ -76,6 +76,7 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
     <link rel="stylesheet" href="style.css">
     <script>
         let popupWindow;
+        let filteredQuestions = <?php echo json_encode($questions); ?>;
 
         function openPopup() {
             const width = 1000;
@@ -113,36 +114,36 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
             }
         }
 
-        async function getRandomQuestion() {
-            try {
-                const response = await fetch('getRandomQuestion.php');
-                const data = await response.json();
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    const content = `
-                        <strong>Class:</strong> ${data.class_name}<br>
-                        <strong>Competency:</strong> ${data.competency_name}<br>
-                        <strong>Subject:</strong> ${data.class_subject}<br><br>
-                        <strong>Question:</strong> ${data.question_text}<br>
-                        <em>${data.question_notes || ""}</em>
-                    `;
-                    updatePopup(content);
-                }
-            } catch (err) {
-                alert('Error fetching random question.');
-                console.error(err);
+        function showSelectedQuestion(content) {
+            document.getElementById("selectedQuestionDisplay").innerHTML = content;
+        }
+
+        function getRandomQuestion() {
+            if (!filteredQuestions || filteredQuestions.length === 0) {
+                alert("No questions available to select from.");
+                return;
             }
+            const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
+            const data = filteredQuestions[randomIndex];
+            const content = `
+                <strong>Class:</strong> ${data.class_name}<br>
+                <strong>Competency:</strong> ${data.competency_name}<br>
+                <strong>Subject:</strong> ${data.class_subject}<br><br>
+                <strong>Question:</strong> ${data.question_text}<br>
+                <em>${data.question_notes || ""}</em>
+            `;
+            showSelectedQuestion(content);
+            updatePopup(content);
         }
 
         function toggleSubject(subject) {
             let url = new URL(window.location.href);
             if (url.searchParams.get('class_subject') === subject) {
-                url.searchParams.delete('class_subject'); // Remove filter if clicked again
+                url.searchParams.delete('class_subject');
             } else {
-                url.searchParams.set('class_subject', subject); // Set the filter
+                url.searchParams.set('class_subject', subject);
             }
-            window.location.href = url.toString(); // Reload with updated URL
+            window.location.href = url.toString();
         }
     </script>
 </head>
@@ -157,20 +158,16 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
             <div class="scrollable-container">
                 <button onclick="openPopup()">Open Student View</button>
                 <?php
-                // Loop through each question and create a button.
                 if (count($questions) > 0) {
                     foreach ($questions as $q) {
-                        // Construct the HTML content for the question details.
                         $content = "<strong>Class:</strong> " . htmlspecialchars($q['class_name']) . "<br>" .
                                    "<strong>Competency:</strong> " . htmlspecialchars($q['competency_name']) . "<br>" .
                                    "<strong>Subject:</strong> " . htmlspecialchars($q['class_subject']) . "<br><br>" .
                                    "<strong>Question:</strong> " . htmlspecialchars($q['question_text']) . "<br>" .
                                    "<em>" . htmlspecialchars($q['question_notes']) . "</em>";
-                        // Escape the content for the onClick attribute.
                         $jsContent = addslashes($content);
-                        // Use a truncated preview of the question text as the button label.
                         $buttonLabel = substr(htmlspecialchars($q['question_text']), 0, 20) . "...";
-                        echo "<button onclick=\"updatePopup('$jsContent')\">$buttonLabel</button>";
+                        echo "<button onclick=\"showSelectedQuestion('$jsContent'); updatePopup('$jsContent');\">$buttonLabel</button>";
                     }
                 } else {
                     echo "<p>No questions found.</p>";
@@ -186,13 +183,14 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
                 </div>
                 <div class="scrollable-container">
                     <?php
-                    // Loop through unique subjects and create a button for each
                     foreach ($uniqueSubjects as $subject) {
                         echo "<button class=\"question-button\" type=\"button\" onclick=\"toggleSubject('$subject')\">$subject</button>";
                     }
                     ?>
                 </div>
             </div>
+
+            <div id="selectedQuestionDisplay" style="margin: 15px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9;"></div>
 
             <div class="button-box">
                 <button class="large-button" onclick="getRandomQuestion()">Random</button>
