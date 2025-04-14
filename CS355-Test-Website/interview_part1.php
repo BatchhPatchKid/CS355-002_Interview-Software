@@ -59,7 +59,7 @@ $competency_result = $conn->query($competency_query);
     <div class="main">
         <h1>Interview</h1>
 
-        <form action="question select.php" method="POST">
+        <form action="question_select.php" method="POST">
         <fieldset>
     <legend>Choose Class(es):</legend>
     <?php
