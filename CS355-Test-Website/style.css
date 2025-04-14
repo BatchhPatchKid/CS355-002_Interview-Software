@@ -33,6 +33,18 @@ label {
     font-weight: bold;
 }
 
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    white-space: nowrap;
+    margin-left: 100px;
+    margin-right: 100px;
+    padding-left: 100px;
+    width: 170px;
+    justify-content: center;
+  }
+
 input {
     display: block;
     width: 100%;
@@ -346,6 +358,8 @@ button {
     font-size: 16px;
     box-sizing: border-box;
 }
+
+
 
 
 
