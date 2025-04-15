@@ -82,8 +82,9 @@ $class_result = $conn->query($class_query);
         </div>
     </div>
     
-    <!-- JavaScript to update competency and subject dropdowns based on the selected class -->
+    <!-- JavaScript to update competency and subject dropdowns based on the selected class and competency -->
     <script>
+    // Update competencies when a class is selected
     document.getElementById('class').addEventListener('change', function() {
         var selectedClass = this.value;
         var competencySelect = document.getElementById('competency');
@@ -94,7 +95,7 @@ $class_result = $conn->query($class_query);
         subjectSelect.innerHTML = '<option value="">Select Subject</option>';
         
         if (selectedClass !== '') {
-            fetch('getClassDetails.php?class=' + encodeURIComponent(selectedClass))
+            fetch('getCompetencies.php?class=' + encodeURIComponent(selectedClass))
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Network response was not ok: " + response.statusText);
@@ -102,18 +103,47 @@ $class_result = $conn->query($class_query);
                     return response.json();
                 })
                 .then(data => {
-                    if(data.error) {
+                    if (data.error) {
                         console.error("Error in response:", data.error);
                         return;
                     }
-                    // Populate competency dropdown
+                    // Populate competency dropdown with competencies for the selected class
                     data.competencies.forEach(function(comp) {
                         var option = document.createElement('option');
                         option.value = comp;
                         option.textContent = comp;
                         competencySelect.appendChild(option);
                     });
-                    // Populate subject dropdown
+                })
+                .catch(error => {
+                    console.error('Error fetching competencies:', error);
+                });
+        }
+    });
+
+    // Update subjects when a competency is selected
+    document.getElementById('competency').addEventListener('change', function() {
+        var selectedClass = document.getElementById('class').value;
+        var selectedCompetency = this.value;
+        var subjectSelect = document.getElementById('subject');
+        
+        // Reset the subject dropdown
+        subjectSelect.innerHTML = '<option value="">Select Subject</option>';
+        
+        if (selectedClass !== '' && selectedCompetency !== '') {
+            fetch('getSubjects.php?class=' + encodeURIComponent(selectedClass) + '&competency=' + encodeURIComponent(selectedCompetency))
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok: " + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error("Error in response:", data.error);
+                        return;
+                    }
+                    // Populate subject dropdown with subjects matching the selected class and competency
                     data.subjects.forEach(function(subj) {
                         var option = document.createElement('option');
                         option.value = subj;
@@ -122,7 +152,7 @@ $class_result = $conn->query($class_query);
                     });
                 })
                 .catch(error => {
-                    console.error('Error fetching class details:', error);
+                    console.error('Error fetching subjects:', error);
                 });
         }
     });
