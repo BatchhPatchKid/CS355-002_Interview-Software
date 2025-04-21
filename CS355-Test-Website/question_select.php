@@ -79,40 +79,62 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
         let filteredQuestions = <?php echo json_encode($questions); ?>;
 
         function openPopup() {
-            const width = 1000;
-            const height = 1000;
-            const left = (window.innerWidth - width) / 2 + window.screenX;
-            const top = (window.innerHeight - height) / 2 + window.screenY;
-            popupWindow = window.open('', 'PopupWindow', `width=${width},height=${height},left=${left},top=${top}`);
-            popupWindow.document.write(`
-                <html>
-                    <head>
-                        <title>Student View</title>
-                        <style>
-                            body {
-                                display: flex;
-                                height: 100vh;
-                                margin: 0;
-                                justify-content: center;
-                                align-items: center;
-                                text-align: center;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <h1></h1>
-                    </body>
-                </html>
-            `);
-        }
+    const width = 1000;
+    const height = 1000;
+    const left = (window.innerWidth - width) / 2 + window.screenX;
+    const top = (window.innerHeight - height) / 2 + window.screenY;
 
-        function updatePopup(content) {
-            if (popupWindow && !popupWindow.closed) {
-                popupWindow.document.body.innerHTML = `<h1>${content}</h1>`;
-            } else {
-                alert('Please open the student view first!');
-            }
+    if (!window.popupWindow || window.popupWindow.closed) {
+        window.popupWindow = window.open('', 'PopupWindow', `width=${width},height=${height},left=${left},top=${top}`);
+
+        // Initialize a basic layout with an updatable content div
+        window.popupWindow.document.write(`
+            <html>
+                <head>
+                    <title>Student View</title>
+                    <style>
+                        body {
+                            display: flex;
+                            height: 100vh;
+                            margin: 0;
+                            justify-content: center;
+                            align-items: center;
+                            text-align: center;
+                            font-family: sans-serif;
+                        }
+                        #popupContent {
+                            padding: 20px;
+                            max-width: 80%;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div id="popupContent">Waiting for question...</div>
+                </body>
+            </html>
+        `);
+    } else {
+        window.popupWindow.focus();
+    }
+}
+
+function updatePopup(content) {
+    if (window.popupWindow && !window.popupWindow.closed) {
+        const popupDoc = window.popupWindow.document;
+        const contentDiv = popupDoc.getElementById('popupContent');
+
+        if (contentDiv) {
+            contentDiv.innerHTML = content;
+        } else {
+            // Recreate the div if somehow missing
+            popupDoc.body.innerHTML = `<div id="popupContent">${content}</div>`;
         }
+    } else {
+        alert('Please open the student view first!');
+    }
+}
+
+
 
         function showSelectedQuestion(content) {
             document.getElementById("selectedQuestionDisplay").innerHTML = content;
@@ -145,6 +167,15 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
             }
             window.location.href = url.toString();
         }
+    let stopwatchSeconds = 0;
+    function updateStopwatch() {
+        stopwatchSeconds++;
+        const mins = Math.floor(stopwatchSeconds / 60).toString().padStart(2, '0');
+        const secs = (stopwatchSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('stopwatch').textContent = `${mins}:${secs}`;
+    }
+    setInterval(updateStopwatch, 1000);
+
     </script>
 </head>
 <body>
@@ -174,6 +205,10 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
                 }
                 ?>
             </div>
+            <div id="stopwatchContainer" style="margin-top: 10px; text-align: left; padding: 10px;">
+    ⏱️       <span id="stopwatch">00:00</span>
+</div>
+
         </div>
 
         <div class="right-container">
