@@ -1,5 +1,4 @@
 <?php
-// getSubjects.php
 
 // Database connection
 $host   = 'localhost';

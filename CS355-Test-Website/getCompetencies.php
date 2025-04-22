@@ -1,5 +1,4 @@
 <?php
-// getCompetencies.php
 
 // Database connection
 $host   = 'localhost';
