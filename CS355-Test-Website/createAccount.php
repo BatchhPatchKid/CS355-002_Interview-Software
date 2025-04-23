@@ -30,6 +30,7 @@
 </body>
 </html>
 <?php
+require_once 'styleColor.php';
 session_start();
 // Process account creation if POST data is provided
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
