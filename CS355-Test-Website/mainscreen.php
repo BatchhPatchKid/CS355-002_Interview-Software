@@ -1,4 +1,5 @@
-<?php include 'header.php'; ?>
+<?php include 'header.php'; 
+require_once 'styleColor.php';?>
 <!DOCTYPE html>
 <html>
 
@@ -17,6 +18,7 @@
         <button onclick="location.href='addClass.php'">Add Class and Competencies</a>
         <button onclick="location.href='createAccount.php'">Create Account</button>
         <button onclick="location.href='login.php'">Login</button>
+        <button onclick="location.href='changeColor.php'">Change Color Scheme</a>
     </div>
     
 </body>
