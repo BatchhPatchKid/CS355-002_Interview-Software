@@ -1,4 +1,5 @@
 <?php
+require_once 'styleColor.php';
 session_start();
 
 // Redirect to login.php if the user is not logged in
@@ -22,6 +23,16 @@ $conn->set_charset("utf8");
 // Retrieve distinct class names for the dropdown
 $class_query = "SELECT DISTINCT class_name FROM class_competency";
 $class_result = $conn->query($class_query);
+
+// Check for success and extract question details from query parameters
+$success = isset($_GET['success']) && $_GET['success'] == 1;
+if ($success) {
+    $question = isset($_GET['question']) ? urldecode($_GET['question']) : '';
+    $class = isset($_GET['class']) ? urldecode($_GET['class']) : '';
+    $competency = isset($_GET['competency']) ? urldecode($_GET['competency']) : '';
+    $subject = isset($_GET['subject']) ? urldecode($_GET['subject']) : '';
+    $notes = isset($_GET['notes']) ? urldecode($_GET['notes']) : '';
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -156,6 +167,20 @@ $class_result = $conn->query($class_query);
                 });
         }
     });
+    // If question was successfully added, send it to the student view
+    <?php if ($success): ?>
+        if (window.opener && !window.opener.closed) {
+            const questionData = {
+                class_name: <?php echo json_encode($class); ?>,
+                competency_name: <?php echo json_encode($competency); ?>,
+                class_subject: <?php echo json_encode($subject); ?>,
+                question_text: <?php echo json_encode($question); ?>,
+                question_notes: <?php echo json_encode($notes); ?>
+            };
+            window.opener.displayLoggedQuestionInStudentView(questionData);
+            window.close();
+        }
+    <?php endif; ?>
     </script>
 </body>
 </html>
