@@ -1,4 +1,5 @@
 <?php
+require_once 'styleColor.php';
 session_start();
 
 // Redirect to login.php if the user is not logged in
@@ -59,8 +60,8 @@ if ($result && $result->num_rows > 0) {
 $conn->close();
 
 // Get selected class and competency names
-$selectedClasses = $_POST['classes'] ?? $_GET['classes'] ?? [];
-$selectedCompetencies = $_POST['competencies'] ?? $_GET['competencies'] ?? [];
+$selectedClasses = isset($_POST['classes']) ? $_POST['classes'] : [];
+$selectedCompetencies = isset($_POST['competencies']) ? $_POST['competencies'] : [];
 
 $uniqueSubjects = [];
 foreach ($questions as $q) {
@@ -159,24 +160,27 @@ function updatePopup(content) {
         }
 
         function toggleSubject(subject) {
-            const form = document.getElementById('categoryForm');
-            const currentUrl = new URL(window.location.href);
-
-            const currentSubject = currentUrl.searchParams.get('class_subject');
-
-            const newUrl = new URL(window.location.href);
-            newUrl.search = ''; 
-
-            if (currentSubject !== subject) {
-                newUrl.searchParams.set('class_subject', subject);
+            let url = new URL(window.location.href);
+            if (url.searchParams.get('class_subject') === subject) {
+                url.searchParams.delete('class_subject');
+            } else {
+                url.searchParams.set('class_subject', subject);
             }
-            const formData = new FormData(form);
-            for (const [key, value] of formData.entries()) {
-                newUrl.searchParams.append(key, value);
-            }
-
-            window.location.href = newUrl.toString();
+            window.location.href = url.toString();
         }
+
+        // Display newly logged question in student view
+        window.displayLoggedQuestionInStudentView = function(data) {
+            const content = `
+                <strong>Class:</strong> ${data.class_name}<br>
+                <strong>Competency:</strong> ${data.competency_name}<br>
+                <strong>Subject:</strong> ${data.class_subject}<br><br>
+                <strong>Question:</strong> ${data.question_text}<br>
+                <em>${data.question_notes || ''}</em>
+            `;
+            updatePopup(content);
+        };
+
     let stopwatchSeconds = 0;
     function updateStopwatch() {
         stopwatchSeconds++;
@@ -226,18 +230,6 @@ function updatePopup(content) {
                 <div class="header-container">
                     <h2>Categories</h2>
                 </div>
-
-                <form id="categoryForm">
-                        <?php
-                        foreach ($selectedClasses as $cls) {
-                            echo '<input type="hidden" name="classes[]" value="' . htmlspecialchars($cls) . '">';
-                        }
-                        foreach ($selectedCompetencies as $comp) {
-                            echo '<input type="hidden" name="competencies[]" value="' . htmlspecialchars($comp) . '">';
-                        }
-                        ?>
-                    </form>
-
                 <div class="scrollable-container">
                     <?php
                     foreach ($uniqueSubjects as $subject) {
@@ -251,6 +243,7 @@ function updatePopup(content) {
 
             <div class="button-box">
                 <button class="large-button" onclick="getRandomQuestion()">Random</button>
+                <button class="large-button" onclick="window.open('addQuestion.php', '_blank')">Log New Question</button>
                 <button class="large-button" onclick="location.href='mainscreen.php'">End Interview</button>
             </div>
         </div>
