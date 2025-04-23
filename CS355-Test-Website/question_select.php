@@ -59,8 +59,8 @@ if ($result && $result->num_rows > 0) {
 $conn->close();
 
 // Get selected class and competency names
-$selectedClasses = isset($_POST['classes']) ? $_POST['classes'] : [];
-$selectedCompetencies = isset($_POST['competencies']) ? $_POST['competencies'] : [];
+$selectedClasses = $_POST['classes'] ?? $_GET['classes'] ?? [];
+$selectedCompetencies = $_POST['competencies'] ?? $_GET['competencies'] ?? [];
 
 $uniqueSubjects = [];
 foreach ($questions as $q) {
@@ -159,13 +159,23 @@ function updatePopup(content) {
         }
 
         function toggleSubject(subject) {
-            let url = new URL(window.location.href);
-            if (url.searchParams.get('class_subject') === subject) {
-                url.searchParams.delete('class_subject');
-            } else {
-                url.searchParams.set('class_subject', subject);
+            const form = document.getElementById('categoryForm');
+            const currentUrl = new URL(window.location.href);
+
+            const currentSubject = currentUrl.searchParams.get('class_subject');
+
+            const newUrl = new URL(window.location.href);
+            newUrl.search = ''; 
+
+            if (currentSubject !== subject) {
+                newUrl.searchParams.set('class_subject', subject);
             }
-            window.location.href = url.toString();
+            const formData = new FormData(form);
+            for (const [key, value] of formData.entries()) {
+                newUrl.searchParams.append(key, value);
+            }
+
+            window.location.href = newUrl.toString();
         }
     let stopwatchSeconds = 0;
     function updateStopwatch() {
@@ -216,6 +226,18 @@ function updatePopup(content) {
                 <div class="header-container">
                     <h2>Categories</h2>
                 </div>
+
+                <form id="categoryForm">
+                        <?php
+                        foreach ($selectedClasses as $cls) {
+                            echo '<input type="hidden" name="classes[]" value="' . htmlspecialchars($cls) . '">';
+                        }
+                        foreach ($selectedCompetencies as $comp) {
+                            echo '<input type="hidden" name="competencies[]" value="' . htmlspecialchars($comp) . '">';
+                        }
+                        ?>
+                    </form>
+
                 <div class="scrollable-container">
                     <?php
                     foreach ($uniqueSubjects as $subject) {
