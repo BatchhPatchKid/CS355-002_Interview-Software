@@ -42,12 +42,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("isssss", $user_id, $class_name, $competency_name, $class_subject, $question_text, $question_notes);
 
     if ($stmt->execute()) {
-        header("Location: mainscreen.php");
+        // Redirect to addQuestion.php with question details
+        $redirectUrl = "addQuestion.php?success=1" .
+                       "&question=" . urlencode($question_text) .
+                       "&class=" . urlencode($class_name) .
+                       "&competency=" . urlencode($competency_name) .
+                       "&subject=" . urlencode($class_subject) .
+                       "&notes=" . urlencode($question_notes);
+        header("Location: $redirectUrl");
         exit();
     } else {
         echo "Error inserting question: " . $stmt->error;
     }
-
+    
     $stmt->close();
     $conn->close();
 } else {
