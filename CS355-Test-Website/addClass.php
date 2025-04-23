@@ -1,4 +1,5 @@
 <?php
+require_once 'styleColor.php';
 session_start();
 
 // Redirect to login.php if the user is not logged in
