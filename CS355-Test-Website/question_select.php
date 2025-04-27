@@ -219,6 +219,10 @@ function updatePopup(content) {
                 }
                 ?>
             </div>
+            <div id="followUpContainer" style="margin-top: 10px; padding: 10px; border: 1px solid #ccc; background-color: #f0f0f0;">
+                <strong>Follow-up Questions:</strong>
+            </div>
+
             <div id="stopwatchContainer" style="margin-top: 10px; text-align: left; padding: 10px;">
     ⏱️       <span id="stopwatch">00:00</span>
 </div>
@@ -250,3 +254,4 @@ function updatePopup(content) {
     </div>
 </body>
 </html>
+
