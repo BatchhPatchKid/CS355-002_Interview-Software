@@ -55,43 +55,54 @@ $competency_result = $conn->query($competency_query);
 <head>
     <title>Oral Interview Part 1</title>
     <link rel="stylesheet" href="style.css">
+    <script>
+        // Function to check if at least one class or one competency is selected
+        function validateForm() {
+            var selectedClasses = document.querySelectorAll('input[name="classes[]"]:checked');
+            var selectedCompetencies = document.querySelectorAll('input[name="competencies[]"]:checked');
+
+            if (selectedClasses.length === 0 && selectedCompetencies.length === 0) {
+                alert("Please select at least one class or one competency to proceed.");
+                return false;  // Prevent form submission
+            }
+            return true;  // Allow form submission
+        }
+    </script>
 </head>
 
 <body>
     <div class="main">
         <h1>Interview</h1>
 
-        <form action="question_select.php" method="POST">
-        <fieldset>
-    <legend>Choose Class(es):</legend>
-    <?php
-    if ($class_result->num_rows > 0) {
-        while ($row = $class_result->fetch_assoc()) {
-            $className = htmlspecialchars($row['class_name']);
-            echo "<label class='checkbox-label'>$className <input type='checkbox' name='classes[]' value='$className'></label><br>";
-        }
-    } else {
-        echo "<p>No classes found.</p>";
-    }
-    ?>
-</fieldset>
-<br>
+        <form action="question_select.php" method="POST" onsubmit="return validateForm();">
+            <fieldset>
+                <legend>Choose Class(es):</legend>
+                <?php
+                if ($class_result->num_rows > 0) {
+                    while ($row = $class_result->fetch_assoc()) {
+                        $className = htmlspecialchars($row['class_name']);
+                        echo "<label class='checkbox-label'>$className <input type='checkbox' name='classes[]' value='$className'></label><br>";
+                    }
+                } else {
+                    echo "<p>No classes found.</p>";
+                }
+                ?>
+            </fieldset>
+            <br>
 
-<fieldset>
-    <legend>Choose Competency(ies):</legend>
-    <?php
-    if ($competency_result->num_rows > 0) {
-        while ($row = $competency_result->fetch_assoc()) {
-            $compName = htmlspecialchars($row['competency_name']);
-            echo "<label class='checkbox-label'>$compName <input type='checkbox' name='competencies[]' value='$compName'></label><br>";
-        }
-    } else {
-        echo "<p>No competencies found.</p>";
-    }
-    ?>
-</fieldset>
-
-
+            <fieldset>
+                <legend>Choose Competency(ies):</legend>
+                <?php
+                if ($competency_result->num_rows > 0) {
+                    while ($row = $competency_result->fetch_assoc()) {
+                        $compName = htmlspecialchars($row['competency_name']);
+                        echo "<label class='checkbox-label'>$compName <input type='checkbox' name='competencies[]' value='$compName'></label><br>";
+                    }
+                } else {
+                    echo "<p>No competencies found.</p>";
+                }
+                ?>
+            </fieldset>
             <br>
 
             <div class="wrap">
@@ -106,5 +117,4 @@ $competency_result = $conn->query($competency_query);
 <?php
 $conn->close();
 ?>
-
 

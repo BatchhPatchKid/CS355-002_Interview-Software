@@ -9,6 +9,16 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Save POST selections to session so they persist across reloads
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $_SESSION['selected_classes'] = $_POST['classes'] ?? [];
+    $_SESSION['selected_competencies'] = $_POST['competencies'] ?? [];
+}
+
+// Use session data for selections
+$selectedClasses = $_SESSION['selected_classes'] ?? [];
+$selectedCompetencies = $_SESSION['selected_competencies'] ?? [];
+
 // Database connection settings
 $host = 'localhost';
 $dbUser = 'root';
@@ -23,15 +33,13 @@ if ($conn->connect_error) {
 // Fetch questions based on selected classes and competencies
 $whereClauses = [];
 
-if (!empty($_POST['classes'])) {
-    $selectedClasses = $_POST['classes'];
+if (!empty($selectedClasses)) {
     $whereClauses[] = "class_name IN ('" . implode("','", array_map(function($class) use ($conn) {
         return mysqli_real_escape_string($conn, $class);
     }, $selectedClasses)) . "')";
 }
 
-if (!empty($_POST['competencies'])) {
-    $selectedCompetencies = $_POST['competencies'];
+if (!empty($selectedCompetencies)) {
     $whereClauses[] = "competency_name IN ('" . implode("','", array_map(function($comp) use ($conn) {
         return mysqli_real_escape_string($conn, $comp);
     }, $selectedCompetencies)) . "')";
@@ -60,17 +68,13 @@ if ($result && $result->num_rows > 0) {
 }
 $conn->close();
 
-// Get selected class and competency names
-$selectedClasses = isset($_POST['classes']) ? $_POST['classes'] : [];
-$selectedCompetencies = isset($_POST['competencies']) ? $_POST['competencies'] : [];
-
+// Extract unique class_subject values
 $uniqueSubjects = [];
 foreach ($questions as $q) {
     $uniqueSubjects[$q['class_subject']] = $q['class_subject'];
 }
-$uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an indexed array
+$uniqueSubjects = array_values($uniqueSubjects);
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -80,56 +84,75 @@ $uniqueSubjects = array_values($uniqueSubjects); // Get unique subjects as an in
         let popupWindow;
         let filteredQuestions = <?php echo json_encode($questions); ?>;
 
+       // window.addEventListener('load', () => {
+       // if (!window.popupWindow || window.popupWindow.closed) {
+        //window.popupWindow = window.open('', 'PopupWindow');
+        //}
+       // });
+
         function openPopup() {
     const width = 1000;
     const height = 1000;
     const left = (window.innerWidth - width) / 2 + window.screenX;
     const top = (window.innerHeight - height) / 2 + window.screenY;
 
-    if (!window.popupWindow || window.popupWindow.closed) {
-        window.popupWindow = window.open('', 'PopupWindow', `width=${width},height=${height},left=${left},top=${top}`);
-
-        // Initialize a basic layout with an updatable content div
-        window.popupWindow.document.write(`
-            <html>
-                <head>
-                    <title>Student View</title>
-                    <style>
-                        body {
-                            display: flex;
-                            height: 100vh;
-                            margin: 0;
-                            justify-content: center;
-                            align-items: center;
-                            text-align: center;
-                            font-family: sans-serif;
-                        }
-                        #popupContent {
-                            padding: 20px;
-                            max-width: 80%;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div id="popupContent">Waiting for question...</div>
-                </body>
-            </html>
-        `);
-    } else {
+    // Check if a popup is already open (and if it is, don't create a new one)
+    if (window.popupWindow && !window.popupWindow.closed) {
         window.popupWindow.focus();
+        localStorage.setItem("studentPopupOpen", "1"); // Save state
+        return;
+    }
+
+    try {
+        window.popupWindow = window.open('', 'PopupWindow', `width=${width},height=${height},left=${left},top=${top}`);
+        // Save state indicating the popup is open
+        localStorage.setItem("studentPopupOpen", "1");
+
+        if (window.popupWindow.document.body.innerHTML.trim() === '') {
+            window.popupWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Student View</title>
+                        <style>
+                            body {
+                                display: flex;
+                                height: 100vh;
+                                margin: 0;
+                                justify-content: center;
+                                align-items: center;
+                                text-align: center;
+                                font-family: sans-serif;
+                            }
+                            #popupContent {
+                                padding: 20px;
+                                max-width: 80%;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div id="popupContent">Waiting for question...</div>
+                    </body>
+                </html>
+            `);
+        }
+    } catch (e) {
+        alert("Popup blocked. Please allow popups for this site.");
     }
 }
 
 function updatePopup(content) {
-    if (window.popupWindow && !window.popupWindow.closed) {
-        const popupDoc = window.popupWindow.document;
-        const contentDiv = popupDoc.getElementById('popupContent');
-
-        if (contentDiv) {
-            contentDiv.innerHTML = content;
-        } else {
-            // Recreate the div if somehow missing
-            popupDoc.body.innerHTML = `<div id="popupContent">${content}</div>`;
+    // Check if the popup state is stored in localStorage
+    if (localStorage.getItem("studentPopupOpen") === "1") {
+        if (window.popupWindow && !window.popupWindow.closed) {
+            const popupDoc = window.popupWindow.document;
+            const contentDiv = popupDoc.getElementById('popupContent');
+            
+            if (contentDiv) {
+                contentDiv.innerHTML = content;
+            } else {
+                // If contentDiv is missing, recreate it
+                popupDoc.body.innerHTML = `<div id="popupContent">${content}</div>`;
+            }
         }
     } else {
         alert('Please open the student view first!');
@@ -192,8 +215,11 @@ function updatePopup(content) {
     setInterval(updateStopwatch, 1000);
 
     </script>
+    
 </head>
 <body>
+
+
     <div class="container">
         <div class="header-container">
             <h2>Class: <?php echo implode(", ", array_map('htmlspecialchars', $selectedClasses)); ?></h2>
