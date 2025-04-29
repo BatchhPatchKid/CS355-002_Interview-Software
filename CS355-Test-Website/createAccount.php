@@ -30,8 +30,9 @@
 </body>
 </html>
 <?php
-require_once 'styleColor.php';
+
 session_start();
+require_once 'styleColor.php';
 // Process account creation if POST data is provided
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Database connection settings

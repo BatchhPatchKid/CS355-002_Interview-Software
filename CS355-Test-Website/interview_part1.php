@@ -1,6 +1,7 @@
 <?php
-require_once 'styleColor.php';
+
 session_start();
+require_once 'styleColor.php';
 
 // Redirect to login.php if the user is not logged in
 if (!isset($_SESSION['user_id'])) {

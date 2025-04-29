@@ -1,7 +1,6 @@
 <?php
-session_start();
-
-// Database connection settings (matching initializeDatabase.php)
+if (session_status() === PHP_SESSION_ACTIVE && isset($_SESSION['user_id'])) {
+  // Database connection settings (matching initializeDatabase.php)
 $host = 'localhost';
 $user = 'root';
 $password = '';
@@ -45,7 +44,10 @@ if (isset($_SESSION['user_id'])) {
         // Log error instead of dying
         error_log("Database connection failed in styleColor.php: " . $conn->connect_error);
     }
+} 
 }
+
+
 ?>
 
 <style>
