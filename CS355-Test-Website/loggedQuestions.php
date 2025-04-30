@@ -1,6 +1,4 @@
 <?php
-
-session_start();
 require_once 'styleColor.php';
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
