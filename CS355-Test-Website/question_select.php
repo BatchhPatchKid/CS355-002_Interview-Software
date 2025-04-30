@@ -192,6 +192,15 @@ $uniqueSubjects = array_values($uniqueSubjects);
             const q = questions[Math.floor(Math.random() * questions.length)];
             showSelectedQuestion(q);
         }
+
+        let stopwatchSeconds = 0;
+        function updateStopwatch() {
+            stopwatchSeconds++;
+            const mins = Math.floor(stopwatchSeconds / 60).toString().padStart(2, '0');
+            const secs = (stopwatchSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('stopwatch').textContent = `${mins}:${secs}`;
+        }
+        setInterval(updateStopwatch, 1000);
     </script>
 </head>
 <body>
