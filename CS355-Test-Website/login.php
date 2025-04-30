@@ -30,8 +30,6 @@
 </html>
 
 <?php
-
-session_start();
 require_once 'styleColor.php';
 
 // Enable strict error reporting for MySQLi
