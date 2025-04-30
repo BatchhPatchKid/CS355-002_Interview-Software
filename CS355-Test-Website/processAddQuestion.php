@@ -1,9 +1,7 @@
 <?php
 session_start();
 
-// Only process if the form was submitted via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Redirect to login.php if the user is not logged in
     if (!isset($_SESSION['user_id'])) {
         header("Location: login.php");
         exit();
@@ -11,38 +9,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $host   = 'localhost';
     $dbUser = 'root';
-    $dbPass = ''; // No password for now
+    $dbPass = '';
     $dbName = 'databaseCS355';
 
-    // Create connection
     $conn = new mysqli($host, $dbUser, $dbPass, $dbName);
     if ($conn->connect_error) {
         die("Connection failed: " . $conn->connect_error);
     }
     $conn->set_charset("utf8");
 
-    // Retrieve the currently logged-in user's ID from session
-    $user_id = $_SESSION['user_id'];
-
-    // Retrieve and sanitize the form input values
-    $question_text   = trim($_POST['question']);
-    $class_name      = trim($_POST['class']);
+    $user_id        = $_SESSION['user_id'];
+    $question_text  = trim($_POST['question']);
+    $class_name     = trim($_POST['class']);
     $competency_name = trim($_POST['competency']);
-    $class_subject   = trim($_POST['subject']);
-    $question_notes  = trim($_POST['notes']);
+    $class_subject  = trim($_POST['subject']);
+    $question_notes = trim($_POST['notes']);
+    $difficulty     = intval($_POST['difficulty']);
+    $parent_id      = !empty($_POST['parent_id']) ? $_POST['parent_id'] : null;
 
-    // Prepare the SQL INSERT statement (note: no difficulty column included)
-    $stmt = $conn->prepare("INSERT INTO logged_questions (user_id, class_name, competency_name, class_subject, question_text, question_notes, date_added) VALUES (?, ?, ?, ?, ?, ?, NOW())");
+    function generate_base_question_id($difficulty, $conn) {
+        $maxNN = null;
+
+        $query = "
+            SELECT MAX(SUBSTRING(id, 2, 2)) AS max_nn FROM (
+                SELECT logged_question_id AS id FROM logged_questions
+                UNION ALL
+                SELECT question_id AS id FROM competency_questions
+            ) AS combined
+            WHERE LEFT(id, 1) = ? AND RIGHT(id, 2) = '00'
+        ";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("s", $difficulty);
+        $stmt->execute();
+        $stmt->bind_result($maxNN);
+        $stmt->fetch();
+        $stmt->close();
+
+        $nextNN = $maxNN !== null ? intval($maxNN) + 1 : 1;
+        return sprintf('%d%02d00', $difficulty, $nextNN);
+    }
+
+    function generate_followup_question_id_from_parent($parent_id, $conn, $difficulty) {
+        $nn = substr($parent_id, 1, 2);
+        $maxFF = null;
+
+        $query = "
+            SELECT MAX(RIGHT(id, 2)) AS max_ff FROM (
+                SELECT logged_question_id AS id FROM logged_questions
+                UNION ALL
+                SELECT question_id AS id FROM competency_questions
+            ) AS combined
+            WHERE SUBSTRING(id, 2, 2) = ? AND RIGHT(id, 2) <> '00'
+        ";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("s", $nn);
+        $stmt->execute();
+        $stmt->bind_result($maxFF);
+        $stmt->fetch();
+        $stmt->close();
+
+        $nextFF = $maxFF !== null ? intval($maxFF) + 1 : 1;
+        return sprintf('%d%s%02d', $difficulty, $nn, $nextFF);
+    }
+
+    if ($parent_id) {
+        $question_id = generate_followup_question_id_from_parent($parent_id, $conn, $difficulty);
+    } else {
+        $question_id = generate_base_question_id($difficulty, $conn);
+    }
+
+    $stmt = $conn->prepare("INSERT INTO logged_questions (
+        user_id, class_name, competency_name, class_subject,
+        question_text, question_notes, logged_question_id, parent_id, date_added
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+
     if (!$stmt) {
         die("Prepare failed: " . $conn->error);
     }
 
-    // Bind parameters:
-    // "i" for user_id, followed by 5 strings for the other fields.
-    $stmt->bind_param("isssss", $user_id, $class_name, $competency_name, $class_subject, $question_text, $question_notes);
+    $stmt->bind_param("isssssss",
+        $user_id, $class_name, $competency_name, $class_subject,
+        $question_text, $question_notes, $question_id, $parent_id
+    );
 
     if ($stmt->execute()) {
-        // Redirect to addQuestion.php with question details
         $redirectUrl = "addQuestion.php?success=1" .
                        "&question=" . urlencode($question_text) .
                        "&class=" . urlencode($class_name) .
@@ -54,11 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         echo "Error inserting question: " . $stmt->error;
     }
-    
+
     $stmt->close();
     $conn->close();
 } else {
-    // If not a POST request, redirect back to the form page
     header("Location: addQuestion.php");
     exit();
 }

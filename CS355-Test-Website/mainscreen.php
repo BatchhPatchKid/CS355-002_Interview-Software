@@ -20,7 +20,5 @@ require_once 'styleColor.php';?>
         <button onclick="location.href='login.php'">Login</button>
         <button onclick="location.href='changeColor.php'">Change Color Scheme</a>
     </div>
-    
 </body>
-
 </html>

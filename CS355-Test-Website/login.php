@@ -1,3 +1,59 @@
+<?php
+ob_start();
+require_once 'styleColor.php';
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+$host   = 'localhost';
+$dbUser = 'root';
+$dbPass = '';
+$dbName = 'databaseCS355';
+
+try {
+    $conn = new mysqli($host, $dbUser, $dbPass, $dbName);
+    $conn->set_charset("utf8");
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $username = trim($_POST['username']);
+        $password = trim($_POST['password']);
+
+        if (empty($username) || empty($password)) {
+            throw new Exception("Missing required fields.");
+        }
+
+        $stmt = $conn->prepare("SELECT user_id, password, role FROM users WHERE username = ?");
+        $stmt->bind_param("s", $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 1) {
+            $row = $result->fetch_assoc();
+
+            if (password_verify($password, $row['password'])) {
+                $_SESSION['user_id'] = $row['user_id'];
+                $_SESSION['username'] = $username;
+                $_SESSION['role'] = $row['role'];
+
+                header("Location: mainscreen.php");
+                exit();
+            } else {
+                echo "Invalid password.";
+            }
+        } else {
+            echo "No user found with the provided username.";
+        }
+        $stmt->close();
+    }
+
+    $conn->close();
+} catch (mysqli_sql_exception $e) {
+    echo "Database error: " . $e->getMessage();
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,79 +73,15 @@
             <div class="wrap">
                 <button type="submit">Login</button>
             </div>
-            <button onclick="location.href='mainscreen.php'">Back</button>
 
-            <!-- BEGIN: Add a "Forgot Password?" link -->
+            <!-- FIXED: This button is now type="button" to prevent form submission -->
+            <button type="button" onclick="location.href='mainscreen.php'">Back</button>
+
             <p>
                 <a href="forgotPassword.php">Forgot Password?</a>
             </p>
-            <!-- END: "Forgot Password?" link -->
         </form>
     </div>
 </body>
 </html>
-
-<?php
-require_once 'styleColor.php';
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-// Enable strict error reporting for MySQLi
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-
-// Database connection settings
-$host   = 'localhost';
-$dbUser = 'root';
-$dbPass = ''; // no password for now
-$dbName = 'databaseCS355';
-
-try {
-    // Create a connection to the database
-    $conn = new mysqli($host, $dbUser, $dbPass, $dbName);
-    $conn->set_charset("utf8");
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Retrieve and sanitize input values
-        $username = trim($_POST['username']);
-        $password = trim($_POST['password']);
-
-        // Validate input
-        if (empty($username) || empty($password)) {
-            throw new Exception("Missing required fields.");
-        }
-
-        // Prepare a SQL SELECT statement to retrieve the user by username
-        $stmt = $conn->prepare("SELECT user_id, password, role FROM users WHERE username = ?");
-        $stmt->bind_param("s", $username);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        // Check if a user was found
-        if ($result->num_rows === 1) {
-            $row = $result->fetch_assoc();
-
-            // Verify the password using password_verify
-            if (password_verify($password, $row['password'])) {
-                // Set session variables upon successful login
-                $_SESSION['user_id'] = $row['user_id'];
-                $_SESSION['username'] = $username;
-                $_SESSION['role'] = $row['role'];  // role is still stored if needed later
-
-                // Redirect to a protected page (for example, mainscreen.php)
-                header("Location: mainscreen.php");
-                exit();
-            } else {
-                echo "Invalid password.";
-            }
-        } else {
-            echo "No user found with the provided username.";
-        }
-        $stmt->close();
-    }
-    $conn->close();
-} catch (mysqli_sql_exception $e) {
-    echo "Database error: " . $e->getMessage();
-} catch (Exception $e) {
-    echo "Error: " . $e->getMessage();
-}
-?>
+<?php ob_end_flush(); ?>
