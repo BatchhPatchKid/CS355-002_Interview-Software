@@ -31,7 +31,9 @@
 
 <?php
 require_once 'styleColor.php';
-
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 // Enable strict error reporting for MySQLi
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
