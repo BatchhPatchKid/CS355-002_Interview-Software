@@ -40,12 +40,6 @@ if (!empty($selectedCompetencies)) {
     }, $selectedCompetencies)) . "')";
 }
 
-$classSubjectFilter = isset($_GET['class_subject']) ? $_GET['class_subject'] : null;
-
-if ($classSubjectFilter) {
-    $whereClauses[] = "class_subject = '" . mysqli_real_escape_string($conn, $classSubjectFilter) . "'";
-}
-
 $query = "SELECT * FROM competency_questions";
 if (count($whereClauses) > 0) {
     $query .= " WHERE " . implode(" AND ", $whereClauses);
@@ -66,8 +60,9 @@ if ($result && $result->num_rows > 0) {
 }
 $conn->close();
 
+// Extract unique subjects
 $uniqueSubjects = [];
-foreach (array_merge($questions, ...array_values($followUps)) as $q) {
+foreach ($questions as $q) {
     $uniqueSubjects[$q['class_subject']] = $q['class_subject'];
 }
 $uniqueSubjects = array_values($uniqueSubjects);
@@ -77,175 +72,168 @@ $uniqueSubjects = array_values($uniqueSubjects);
 <head>
     <title>Oral Interview Question Select</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body, button, #popupContent, #selectedQuestionDisplay {
+            font-size: 18px;
+        }
+        /* Ensure popup content is larger */
+        #popupContent {
+            padding: 20px;
+            max-width: 80%;
+            font-size: 20px;
+        }
+        .question-btn, .large-button, .scrollable-container button {
+            font-size: 16px;
+        }
+    </style>
     <script>
         let popupWindow;
-        const questions = <?php echo json_encode($questions); ?>;
-        const followUps = <?php echo json_encode($followUps); ?>;
+        const questions = <?php echo json_encode($questions, JSON_HEX_TAG); ?>;
+        const followUps = <?php echo json_encode($followUps, JSON_HEX_TAG); ?>;
 
         function openPopup() {
-            const width = 1000;
-            const height = 1000;
+            const width = 1000, height = 1000;
             const left = (window.innerWidth - width) / 2 + window.screenX;
-            const top = (window.innerHeight - height) / 2 + window.screenY;
+            const top  = (window.innerHeight - height) / 2 + window.screenY;
 
-            if (window.popupWindow && !window.popupWindow.closed) {
-                window.popupWindow.focus();
+            if (popupWindow && !popupWindow.closed) {
+                popupWindow.focus();
                 localStorage.setItem("studentPopupOpen", "1");
                 return;
             }
 
-            try {
-                window.popupWindow = window.open('', 'PopupWindow', `width=${width},height=${height},left=${left},top=${top}`);
-                localStorage.setItem("studentPopupOpen", "1");
-
-                if (window.popupWindow.document.body.innerHTML.trim() === '') {
-                    window.popupWindow.document.write(`
-                        <html>
-                        <head>
-                            <title>Student View</title>
-                            <style>
-                                body { display: flex; height: 100vh; margin: 0; justify-content: center; align-items: center; font-family: sans-serif; }
-                                #popupContent { padding: 20px; max-width: 80%; }
-                            </style>
-                        </head>
-                        <body><div id="popupContent">Waiting for question...</div></body></html>
-                    `);
-                }
-            } catch (e) {
-                alert("Popup blocked. Please allow popups for this site.");
-            }
+            popupWindow = window.open('', 'PopupWindow', `width=${width},height=${height},left=${left},top=${top}`);
+            localStorage.setItem("studentPopupOpen", "1");
+            popupWindow.document.write(`
+                <html>
+                <head><title>Student View</title>
+                <style>
+                    body { display:flex; height:100vh; margin:0; justify-content:center; align-items:center; font-family:sans-serif; font-size: 20px; }
+                    #popupContent { padding:20px; max-width:80%; font-size: 22px; }
+                </style>
+                </head>
+                <body><div id="popupContent">Waiting for question...</div></body>
+                </html>
+            `);
         }
 
         function updatePopup(content) {
-            if (localStorage.getItem("studentPopupOpen") === "1") {
-                if (window.popupWindow && !window.popupWindow.closed) {
-                    const popupDoc = window.popupWindow.document;
-                    const contentDiv = popupDoc.getElementById('popupContent');
-                    if (contentDiv) {
-                        contentDiv.innerHTML = content;
-                    } else {
-                        popupDoc.body.innerHTML = `<div id="popupContent">${content}</div>`;
-                    }
-                }
+            if (localStorage.getItem("studentPopupOpen") === "1"
+                && popupWindow && !popupWindow.closed) {
+                const el = popupWindow.document.getElementById('popupContent');
+                if (el) el.textContent = content;
+                else popupWindow.document.body.innerHTML = `<div id="popupContent">${content}</div>`;
             } else {
                 alert('Please open the student view first!');
             }
         }
 
-        function displayLoggedQuestionInStudentView(data) {
-            const content = `
-                <strong>Class:</strong> ${data.class_name}<br>
-                <strong>Competency:</strong> ${data.competency_name}<br>
-                <strong>Subject:</strong> ${data.class_subject}<br><br>
-                <strong>Question:</strong> ${data.question_text}<br>
-                <em>${data.question_notes || ''}</em>
-            `;
-            updatePopup(content);
-        }
-
-        function showFollowUps(parentId) {
-            const container = document.getElementById("followUpContainer");
-            container.innerHTML = "<strong>Follow-up Questions:</strong><br>";
-            if (followUps[parentId]) {
-                followUps[parentId].forEach(q => {
-                    const btn = document.createElement("button");
-                    btn.textContent = q.question_text.substring(0, 20) + '...';
-                    btn.onclick = () => {
-                        const content = `
-                            <strong>Class:</strong> ${q.class_name}<br>
-                            <strong>Competency:</strong> ${q.competency_name}<br>
-                            <strong>Subject:</strong> ${q.class_subject}<br><br>
-                            <strong>Question:</strong> ${q.question_text}<br>
-                            <em>${q.question_notes || ''}</em>`;
-                        updatePopup(content);
-                    };
-                    container.appendChild(btn);
-                });
-            }
-        }
-
-        function showSelectedQuestion(q) {
-            const content = `
+        function formatDisplay(q) {
+            return `
                 <strong>Class:</strong> ${q.class_name}<br>
                 <strong>Competency:</strong> ${q.competency_name}<br>
                 <strong>Subject:</strong> ${q.class_subject}<br><br>
                 <strong>Question:</strong> ${q.question_text}<br>
                 <em>${q.question_notes || ''}</em>
             `;
-            document.getElementById("selectedQuestionDisplay").innerHTML = content;
-            updatePopup(content);
+        }
+
+        function showFollowUps(parentId) {
+            const container = document.getElementById("followUpContainer");
+            container.innerHTML = "<strong>Follow-up Questions:</strong><br>";
+            (followUps[parentId] || []).forEach(q => {
+                const btn = document.createElement("button");
+                btn.textContent = q.question_text.slice(0, 20) + '...';
+                btn.onclick = () => {
+                    document.getElementById('selectedQuestionDisplay').innerHTML = formatDisplay(q);
+                    updatePopup(q.question_text);
+                    showFollowUps(q.question_id);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function showSelectedQuestion(q) {
+            document.getElementById("selectedQuestionDisplay").innerHTML = formatDisplay(q);
+            updatePopup(q.question_text);
             showFollowUps(q.question_id);
         }
 
-        function toggleSubject(subject) {
-            let url = new URL(window.location.href);
-            if (url.searchParams.get('class_subject') === subject) {
-                url.searchParams.delete('class_subject');
-            } else {
-                url.searchParams.set('class_subject', subject);
-            }
-            window.location.href = url.toString();
+        function filterQuestions(subject) {
+            document.querySelectorAll('.question-btn').forEach(btn => {
+                btn.style.display = (subject === 'All' || btn.dataset.subject === subject) ? '' : 'none';
+            });
+            document.getElementById("selectedQuestionDisplay").innerHTML = '';
+            document.getElementById("followUpContainer").innerHTML = '<strong>Follow-up Questions:</strong>';
         }
 
         function getRandomQuestion() {
-            if (!questions.length) return alert("No questions available.");
-            const q = questions[Math.floor(Math.random() * questions.length)];
-            showSelectedQuestion(q);
+            const visible = Array.from(document.querySelectorAll('.question-btn'))
+                .filter(btn => btn.style.display !== 'none');
+            if (!visible.length) return alert("No questions available.");
+            visible[Math.floor(Math.random() * visible.length)].click();
         }
 
         let stopwatchSeconds = 0;
         function updateStopwatch() {
             stopwatchSeconds++;
-            const mins = Math.floor(stopwatchSeconds / 60).toString().padStart(2, '0');
-            const secs = (stopwatchSeconds % 60).toString().padStart(2, '0');
-            document.getElementById('stopwatch').textContent = `${mins}:${secs}`;
+            const m = String(Math.floor(stopwatchSeconds/60)).padStart(2,'0');
+            const s = String(stopwatchSeconds%60).padStart(2,'0');
+            document.getElementById('stopwatch').textContent = `${m}:${s}`;
         }
         setInterval(updateStopwatch, 1000);
     </script>
 </head>
 <body>
-<div class="container">
-    <div class="header-container">
-        <h2>Class: <?= implode(", ", array_map('htmlspecialchars', $selectedClasses)); ?></h2>
-        <h2>Competency: <?= implode(", ", array_map('htmlspecialchars', $selectedCompetencies)); ?></h2>
+<div class="container" style="font-size:18px;">
+    <div class="header-container" style="font-size:20px;">
+        <h2>Class: <?= implode(", ", array_map('htmlspecialchars', $selectedClasses)) ?></h2>
+        <h2>Competency: <?= implode(", ", array_map('htmlspecialchars', $selectedCompetencies)) ?></h2>
     </div>
 
     <div class="left-box">
         <div class="scrollable-container">
-            <button onclick="openPopup()">Open Student View</button>
-            <?php
-            foreach ($questions as $q) {
-                $label = htmlspecialchars(substr($q['question_text'], 0, 20)) . "...";
-                echo "<button onclick='showSelectedQuestion(" . json_encode($q) . ")'>$label</button>";
-            }
-            ?>
+            <button onclick="openPopup()" style="font-size:16px;">Open Student View</button>
+            <?php foreach ($questions as $q): ?>
+                <button
+                    class="question-btn"
+                    data-subject="<?= htmlspecialchars($q['class_subject']) ?>"
+                    onclick='showSelectedQuestion(<?= json_encode($q, JSON_HEX_TAG) ?>)'
+                    style="font-size:16px;">
+                    <?= htmlspecialchars(substr($q['question_text'], 0, 20)) ?>...
+                </button>
+            <?php endforeach; ?>
         </div>
-        <div id="followUpContainer" style="margin-top:10px; padding:10px; border:1px solid #ccc; background:#f0f0f0;">
+        <div id="followUpContainer" style="margin-top:10px; padding:10px; border:1px solid #ccc; background:#f0f0f0; font-size:16px;">
             <strong>Follow-up Questions:</strong>
         </div>
-        <div id="stopwatchContainer" style="margin-top: 10px; text-align: left; padding: 10px;">
+        <div id="stopwatchContainer" style="margin-top: 10px; text-align: left; padding: 10px; font-size:16px;">
             ⏱️ <span id="stopwatch">00:00</span>
         </div>
     </div>
 
     <div class="right-container">
         <div class="right-box">
-            <div class="header-container">
+            <div class="header-container" style="font-size:18px;">
                 <h2>Categories</h2>
             </div>
             <div class="scrollable-container">
-                <?php
-                foreach ($uniqueSubjects as $subject) {
-                    echo "<button class=\"question-button\" onclick=\"toggleSubject('$subject')\">$subject</button>";
-                }
-                ?>
+                <button onclick="filterQuestions('All')" style="font-size:16px;">All</button>
+                <?php foreach ($uniqueSubjects as $subject): ?>
+                    <button onclick="filterQuestions('<?= htmlspecialchars($subject) ?>')" style="font-size:16px;">
+                        <?= htmlspecialchars($subject) ?>
+                    </button>
+                <?php endforeach; ?>
             </div>
         </div>
-        <div id="selectedQuestionDisplay" style="margin: 15px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9;"></div>
+
+        <div id="selectedQuestionDisplay" style="margin: 15px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; font-size:18px;">
+        </div>
+
         <div class="button-box">
-            <button class="large-button" onclick="getRandomQuestion()">Random</button>
-            <button class="large-button" onclick="window.open('addQuestion.php', '_blank')">Log New Question</button>
-            <button class="large-button" onclick="location.href='mainscreen.php'">End Interview</button>
+            <button class="large-button" onclick="getRandomQuestion()" style="font-size:16px;">Random</button>
+            <button class="large-button" onclick="window.open('addQuestion.php', '_blank')" style="font-size:16px;">Log New Question</button>
+            <button class="large-button" onclick="location.href='mainscreen.php'" style="font-size:16px;">End Interview</button>
         </div>
     </div>
 </div>
